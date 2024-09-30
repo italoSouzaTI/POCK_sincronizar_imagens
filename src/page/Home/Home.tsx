@@ -3,7 +3,7 @@ import { Input, InputRef } from "../../components/Input/Input";
 import { useNavigation } from "@react-navigation/native";
 import { useCameraPermissions } from "expo-camera";
 import { useEffect, useRef } from "react";
-import { IItem, INITIAL_ITEM, useItemStore } from "../../store/useItemStore";
+import { IItem, useItemStore } from "../../store/useItemStore";
 import { useDBStore } from "../../store/useDBStore";
 
 export function Home() {
@@ -63,7 +63,6 @@ export function Home() {
             inputQtdRef.current?.setValueInput(itemCurrent.qtd);
         }
     }, [itemCurrent]);
-    console.log("itemCurrent", itemCurrent);
 
     return (
         <>

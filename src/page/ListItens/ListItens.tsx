@@ -1,10 +1,24 @@
-import { Dimensions, Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Dimensions, Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useDBStore } from "../../store/useDBStore";
-
+import * as FileSystem from "expo-file-system";
+import { useEffect } from "react";
 export function ListItens() {
     const { dbItens } = useDBStore(({ dbItens }) => ({
         dbItens,
     }));
+    const readFile = async () => {
+        const newFilePath = `${FileSystem.documentDirectory}imagensAPPDB`;
+        try {
+            const content = await FileSystem.readDirectoryAsync(newFilePath);
+            console.log("Conteúdo do arquivo:", content);
+        } catch (err) {
+            console.error("Erro ao ler o arquivo:", err);
+            Alert.alert("Erro", "Não foi possível ler o arquivo.");
+        }
+    };
+    useEffect(() => {
+        readFile();
+    }, []);
     return (
         <ScrollView
             contentContainerStyle={{
