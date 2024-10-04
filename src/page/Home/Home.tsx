@@ -92,6 +92,7 @@ export function Home() {
             <StatusBar barStyle={"dark-content"} />
             <ScrollView
                 contentContainerStyle={{
+                    flexGrow: 1,
                     padding: 16,
                     gap: 16,
                     backgroundColor: "#fff",
