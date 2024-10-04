@@ -5,7 +5,7 @@ interface InputProps extends TextInputProps {
     label: string;
 }
 export type InputRef = {
-    getValueInput: () => string | number | undefined;
+    getValueInput: () => any;
     setValueInput: (value: string | number) => void;
 };
 export const Input = forwardRef<InputRef, InputProps>(({ label, ...restInput }, ref) => {

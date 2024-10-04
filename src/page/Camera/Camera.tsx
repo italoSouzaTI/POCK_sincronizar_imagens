@@ -14,6 +14,7 @@ export function Camera() {
     async function handlePicture() {
         if (cameraRef.current) {
             const photoData = await cameraRef.current?.takePictureAsync();
+            console.log("photoData", photoData);
             let data = itemCurrent;
             const newUriPhoto = await copyImageToPermanentStorage(photoData?.uri);
             data.img = newUriPhoto;

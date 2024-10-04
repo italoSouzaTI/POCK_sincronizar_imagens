@@ -33,6 +33,18 @@
                     "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera",
                     "recordAudioAndroid": false
                 }
+            ],
+            ["@morrowdigital/watermelondb-expo-plugin", { "disableJsi": true }],
+            [
+                "expo-build-properties",
+                {
+                    "android": {
+                        "kotlinVersion": "1.6.10",
+                        "packagingOptions": {
+                            "pickFirst": ["**/libc++_shared.so"]
+                        }
+                    }
+                }
             ]
         ]
     }

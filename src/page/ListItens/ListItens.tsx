@@ -1,24 +1,19 @@
 import { Alert, Dimensions, Image, ScrollView, StyleSheet, Text, View } from "react-native";
-import { useDBStore } from "../../store/useDBStore";
-import * as FileSystem from "expo-file-system";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { database } from "../../dataBase";
+import { ProductModel } from "../../dataBase/model/productModel";
 export function ListItens() {
-    const { dbItens } = useDBStore(({ dbItens }) => ({
-        dbItens,
-    }));
-    const readFile = async () => {
-        const newFilePath = `${FileSystem.documentDirectory}imagensAPPDB`;
-        try {
-            const content = await FileSystem.readDirectoryAsync(newFilePath);
-            console.log("Conteúdo do arquivo:", content);
-        } catch (err) {
-            console.error("Erro ao ler o arquivo:", err);
-            Alert.alert("Erro", "Não foi possível ler o arquivo.");
-        }
-    };
+    const [dbItens, setDbItens] = useState<ProductModel[]>([]);
+    async function fetchData() {
+        const productCollection = database.get<ProductModel>("product");
+        const response = await productCollection.query().fetch();
+        setDbItens(response);
+    }
     useEffect(() => {
-        readFile();
+        fetchData();
     }, []);
+
+    console.log("dbItens", dbItens);
     return (
         <ScrollView
             contentContainerStyle={{
@@ -27,13 +22,13 @@ export function ListItens() {
                 gap: 32,
             }}
         >
-            {dbItens.map((item, index) => (
-                <View style={styles.containerItem} key={index}>
-                    <Text>{item.nome}</Text>
+            {dbItens.map((item) => (
+                <View style={styles.containerItem} key={item.id}>
+                    <Text>{item.name_product}</Text>
                     <Text>{item.qtd}</Text>
-                    {item.img?.length ? (
+                    {item.file_photo?.length ? (
                         <Image
-                            source={{ uri: item.img }}
+                            source={{ uri: item.file_photo }}
                             width={Dimensions.get("screen").width - 32}
                             height={200}
                             resizeMode="cover"
