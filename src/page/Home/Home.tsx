@@ -16,6 +16,7 @@ import { useEffect, useRef, useState } from "react";
 import { IItem, useItemStore } from "../../store/useItemStore";
 import { database } from "../../dataBase";
 import { ProductModel } from "../../dataBase/model/productModel";
+import * as Notifications from "expo-notifications";
 
 export function Home() {
     const inputNameRef = useRef<InputRef>(null);
@@ -87,6 +88,31 @@ export function Home() {
         fetchData();
     }, [itemCurrent]);
 
+    async function schedulePushNotification() {
+        await Notifications.scheduleNotificationAsync({
+            content: {
+                title: `⚠️ Atenção`,
+                body: "Você possui itens pendentes a serem sincronizados.",
+                data: { action: "ListItens" },
+            },
+
+            trigger: null,
+        });
+    }
+    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
+        console.log("response", response);
+        const { actionIdentifier, notification } = response;
+
+        // Verifica se a notificação tem o dado que você definiu
+        if (notification.request.content.data.action === "ListItens") {
+            // Navega para a tela desejada
+            navigate("ListItens");
+        }
+    });
+    useEffect(() => {
+        return () => subscription.remove(); // Limpa o listener
+    }, []);
+
     return (
         <>
             <StatusBar barStyle={"dark-content"} />
@@ -135,6 +161,19 @@ export function Home() {
                 >
                     <Text style={styles.containerBtnText}>{`Ir para lista de itens salvos -> ${dataLength}`}</Text>
                 </TouchableOpacity>
+                <TouchableOpacity
+                    activeOpacity={0.8}
+                    style={styles.containerNotificationBtn}
+                    onPress={schedulePushNotification}
+                >
+                    <Text
+                        style={{
+                            fontWeight: "bold",
+                        }}
+                    >
+                        Disparar notificações
+                    </Text>
+                </TouchableOpacity>
             </ScrollView>
         </>
     );
@@ -160,6 +199,13 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center",
         backgroundColor: "red",
+        height: 40,
+        borderRadius: 4,
+    },
+    containerNotificationBtn: {
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "orange",
         height: 40,
         borderRadius: 4,
     },
