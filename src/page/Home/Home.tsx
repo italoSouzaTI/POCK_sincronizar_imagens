@@ -17,6 +17,24 @@ import { IItem, useItemStore } from "../../store/useItemStore";
 import { database } from "../../dataBase";
 import { ProductModel } from "../../dataBase/model/productModel";
 import * as Notifications from "expo-notifications";
+import * as BackgroundFetch from "expo-background-fetch";
+import * as TaskManager from "expo-task-manager";
+
+//Chamada tem quer escopo Global.
+const BACKGROUND_FETCH_TASK = "Teste em background";
+
+// Criando registro para rodar em segundo plano
+async function registerBackgroundFetchAsync() {
+    return BackgroundFetch.registerTaskAsync(BACKGROUND_FETCH_TASK, {
+        minimumInterval: 60 * 1, // 1 minutes
+        stopOnTerminate: false, // android only,
+        startOnBoot: true, // android only
+    });
+}
+//cancelando registro de background
+async function unregisterBackgroundFetchAsync() {
+    return BackgroundFetch.unregisterTaskAsync(BACKGROUND_FETCH_TASK);
+}
 
 export function Home() {
     const inputNameRef = useRef<InputRef>(null);
@@ -41,6 +59,7 @@ export function Home() {
     async function fetchData() {
         const productCollection = await database.get<ProductModel>("product");
         const response = await productCollection.query().fetch();
+        console.log("fetchData", response.length);
         setDataLength(response.length);
     }
 
@@ -78,6 +97,32 @@ export function Home() {
             inputQtdRef.current?.setValueInput(undefined);
         } catch (error) {}
     }
+
+    TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
+        try {
+            await fetchData();
+            // Be sure to return the successful result type!
+            return BackgroundFetch.BackgroundFetchResult.NewData;
+        } catch (error) {
+            return BackgroundFetch.BackgroundFetchResult.Failed;
+        }
+    });
+
+    const checkStatusAsync = async () => {
+        const status = await BackgroundFetch.getStatusAsync();
+        // status = Danied = 1 |Restricted = 2 | Available = 3
+        console.log("checkStatusAsync - staus", status);
+        if (status == 3) {
+            const isRegistered = await TaskManager.isTaskRegisteredAsync(BACKGROUND_FETCH_TASK);
+            console.log("isRegistered", isRegistered);
+            if (isRegistered) {
+                await unregisterBackgroundFetchAsync();
+            } else {
+                await registerBackgroundFetchAsync();
+            }
+        }
+    };
+
     useEffect(() => {
         if (itemCurrent.nome) {
             inputNameRef.current?.setValueInput(itemCurrent.nome);
@@ -86,6 +131,7 @@ export function Home() {
             inputQtdRef.current?.setValueInput(itemCurrent.qtd);
         }
         fetchData();
+        checkStatusAsync();
     }, [itemCurrent]);
 
     async function schedulePushNotification() {
