@@ -9,12 +9,16 @@ const Stack = createNativeStackNavigator();
 
 export function Route() {
     const { navigate } = useNavigation();
+    /*
+    Quick Actions
+    Tem que ser chamado na raiz das rotas
+    */
     useQuickActionCallback((action) => {
-        console.log(action);
         if (action.hasOwnProperty("params") && action.params?.href == "ListItens") {
             navigate("ListItens");
         }
     });
+
     useEffect(() => {
         QuickActions.setItems([
             {

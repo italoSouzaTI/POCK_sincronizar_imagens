@@ -19,6 +19,7 @@ import { ProductModel } from "../../dataBase/model/productModel";
 import * as Notifications from "expo-notifications";
 import * as BackgroundFetch from "expo-background-fetch";
 import * as TaskManager from "expo-task-manager";
+import { suparbaseConnetion } from "../../dataBase/service/supabase";
 
 //Chamada tem quer escopo Global.
 const BACKGROUND_FETCH_TASK = "Teste em background";
@@ -122,6 +123,14 @@ export function Home() {
             }
         }
     };
+    async function handleaAddDB() {
+        const { data, error } = await suparbaseConnetion.from("syncDB").insert({
+            created_at: "",
+            nome: "",
+            qtd: "",
+            update_at: "",
+        });
+    }
 
     useEffect(() => {
         if (itemCurrent.nome) {
@@ -130,9 +139,13 @@ export function Home() {
         if (itemCurrent.qtd) {
             inputQtdRef.current?.setValueInput(itemCurrent.qtd);
         }
+
         fetchData();
         checkStatusAsync();
     }, [itemCurrent]);
+    useEffect(() => {
+        console.log("suparbaseConnetion", suparbaseConnetion);
+    }, []);
 
     async function schedulePushNotification() {
         await Notifications.scheduleNotificationAsync({

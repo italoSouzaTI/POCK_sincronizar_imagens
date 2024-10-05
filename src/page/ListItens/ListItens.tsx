@@ -22,22 +22,42 @@ export function ListItens() {
                 gap: 32,
             }}
         >
-            {dbItens.map((item) => (
-                <View style={styles.containerItem} key={item.id}>
-                    <Text>{item.name_product}</Text>
-                    <Text>{item.qtd}</Text>
-                    {item.file_photo?.length ? (
-                        <Image
-                            source={{ uri: item.file_photo }}
-                            width={Dimensions.get("screen").width - 32}
-                            height={200}
-                            resizeMode="cover"
+            {dbItens.length &&
+                dbItens.map((item) => (
+                    <View style={styles.containerItem} key={item.id}>
+                        <Text style={styles.title}>Nome do produto</Text>
+                        <Text>{item.name_product}</Text>
+                        <Text style={styles.title}>Quantidade itens selecionados</Text>
+                        <Text>{item.qtd}</Text>
+                        <Text style={styles.title}>Data</Text>
+                        <Text>{`${new Date(item.created_at)}`}</Text>
+                        {item.file_photo?.length ? (
+                            <View
+                                style={{
+                                    padding: 4,
+                                }}
+                            >
+                                <Text style={styles.title}>Foto do produto</Text>
+                                <Image
+                                    source={{ uri: item.file_photo }}
+                                    width={Dimensions.get("screen").width - 42}
+                                    height={200}
+                                    resizeMode="cover"
+                                />
+                            </View>
+                        ) : (
+                            <Text style={{ color: "red" }}>SEM IMAGEM</Text>
+                        )}
+                        <View
+                            style={{
+                                width: "100%",
+                                height: 2,
+                                borderWidth: 1,
+                                borderColor: "gray",
+                            }}
                         />
-                    ) : (
-                        <Text style={{ color: "red" }}>SEM IMAGEM</Text>
-                    )}
-                </View>
-            ))}
+                    </View>
+                ))}
         </ScrollView>
     );
 }
@@ -51,6 +71,10 @@ const styles = StyleSheet.create({
     },
     containerItem: {
         gap: 16,
-        borderWidth: 1,
+        paddingHorizontal: 2,
+    },
+    title: {
+        fontWeight: "bold",
+        fontSize: 16,
     },
 });
