@@ -1,5 +1,5 @@
 import { Model } from "@nozbe/watermelondb";
-import { field } from "@nozbe/watermelondb/decorators";
+import { field, date } from "@nozbe/watermelondb/decorators";
 
 export class ProductModel extends Model {
     static table = "product";
@@ -13,6 +13,9 @@ export class ProductModel extends Model {
     @field("file_photo")
     file_photo!: string;
 
-    @field("created_at")
+    @date("created_at")
     created_at!: number;
+
+    @date("updated_at")
+    updated_at!: number;
 }
