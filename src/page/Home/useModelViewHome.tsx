@@ -9,7 +9,7 @@ import { useItemStore } from "../../store/useItemStore";
 import { InputRef } from "../../components";
 import { database } from "../../dataBase";
 import { ProductModel } from "../../dataBase/model/productModel";
-import { Alert } from "react-native";
+import { Alert, AppState } from "react-native";
 
 //Chamada tem quer escopo Global.
 const BACKGROUND_FETCH_TASK = "Teste em background";
@@ -38,19 +38,8 @@ export function useModelViewHome() {
         setItemCurrent,
     }));
 
-    // Definindo tarefa a ser executada em 2 plano.
-    TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
-        try {
-            await syncDB();
-            // Be sure to return the successful result type!
-            return BackgroundFetch.BackgroundFetchResult.NewData;
-        } catch (error) {
-            return BackgroundFetch.BackgroundFetchResult.Failed;
-        }
-    });
     /*
     verificando status do registro em segundo plano
-    Antes de realizar um registro defina a tarefa antes de chamar esse method
 */
     const checkStatusAsync = async () => {
         const status = await BackgroundFetch.getStatusAsync();
@@ -61,11 +50,23 @@ export function useModelViewHome() {
             console.log("isRegistered", isRegistered);
             if (isRegistered) {
                 await unregisterBackgroundFetchAsync();
+                await checkStatusAsync();
             } else {
                 await registerBackgroundFetchAsync();
             }
         }
     };
+    // Definindo tarefa a ser executada em 2 plano.
+    TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
+        try {
+            // schedulePushNotification();
+            await syncDB();
+            // Be sure to return the successful result type!
+            return BackgroundFetch.BackgroundFetchResult.NewData;
+        } catch (error) {
+            return BackgroundFetch.BackgroundFetchResult.Failed;
+        }
+    });
 
     async function handlePermissionCamera() {
         try {
@@ -177,41 +178,67 @@ export function useModelViewHome() {
 
     async function syncDB() {
         try {
-            //verificar pq o loop não ta funcionando
             const DATE_DEFAULT = new Date("1970-01-01T00:00:00.000Z").getTime();
             const productCollection = await database.get<ProductModel>("product");
             const response = await productCollection.query().fetch();
-            const productsSync = response.filter((item) => item._raw.updated_at == DATE_DEFAULT);
+            const productsSync = response.filter((item) => item._raw.updated_at === DATE_DEFAULT);
+
+            console.log(`Produtos a sincronizar: ${productsSync.length}`);
+
             if (productsSync.length) {
                 await schedulePushNotification(productsSync.length);
-                for (let index = 0; index < productsSync.length; index++) {
-                    console.log("productsSync", productsSync[index]._raw);
+                const updatePromises = productsSync.map(async (product) => {
+                    console.log("productsSync", product._raw);
                     const update = new Date();
                     const newData = {
-                        keyDB: productsSync[index]._raw.id,
-                        created_at: new Date(productsSync[index]._raw.created_at),
-                        name_product: productsSync[index]._raw.name_product,
-                        qtd: productsSync[index]._raw.qtd,
-                        file_photo: productsSync[index]._raw.file_photo,
+                        keyDB: product._raw.id,
+                        created_at: new Date(product._raw.created_at),
+                        name_product: product._raw.name_product,
+                        qtd: product._raw.qtd,
+                        file_photo: product._raw.file_photo,
                         updated_at: update,
                     };
                     console.log(newData);
-                    const { data, error, status } = await suparbaseConnetion.from("syncDB").insert(newData);
-                    if (status == 201) {
-                        const Uniqueproduct = await database
-                            .get<ProductModel>("product")
-                            .find(productsSync[index]._raw.id);
-                        await Uniqueproduct.update(() => {
-                            Uniqueproduct.updated_at = new Date(update).getTime();
-                        });
+
+                    try {
+                        const { status, error } = await suparbaseConnetion.from("syncDB").insert(newData);
+                        if (status === 201) {
+                            const Uniqueproduct = await database.get<ProductModel>("product").find(product._raw.id);
+
+                            if (Uniqueproduct) {
+                                console.log(Uniqueproduct._raw);
+                                console.log("update.getTime()", update.getTime());
+                                const responseUniqueproduct = await Uniqueproduct.update((draft) => {
+                                    draft.updated_at = update.getTime();
+                                });
+                                console.log("responseUniqueproduct", responseUniqueproduct);
+                            } else {
+                                console.error(`Produto não encontrado: ${product._raw.id}`);
+                            }
+                        } else {
+                            console.error("Erro na inserção:", error);
+                        }
+                    } catch (err) {
+                        console.error("Erro durante a inserção:", err);
                     }
-                }
+                });
+                await Promise.all(updatePromises);
             }
         } catch (error) {
-            console.log("syncDB - error", error);
-        } finally {
+            console.error("syncDB - error:", error);
         }
     }
+    useEffect(() => {
+        const subscription = AppState.addEventListener("change", async (nextAppState) => {
+            if (nextAppState === "active") {
+                await fetchDataSuparbase();
+            }
+        });
+
+        return () => {
+            subscription.remove();
+        };
+    }, []);
     useEffect(() => {
         if (itemCurrent.nome) {
             inputNameRef.current?.setValueInput(itemCurrent.nome);
@@ -225,8 +252,6 @@ export function useModelViewHome() {
         if (isfocused) {
             // console.log("suparbaseConnetion", suparbaseConnetion);
             checkStatusAsync();
-            //coloca dentro do appState para renderizar toda vez que entra no app.
-            fetchDataSuparbase();
         }
     }, [isfocused]);
     useEffect(() => {
@@ -239,7 +264,10 @@ export function useModelViewHome() {
         status,
         dataLength,
         itemCurrent,
+        setItemCurrent,
+        navigate,
         handlePermissionCamera,
+        schedulePushNotification,
         handleSaveDB,
     };
 }

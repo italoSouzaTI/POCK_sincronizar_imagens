@@ -13,14 +13,21 @@
         },
         "ios": {
             "supportsTablet": true,
-            "bundleIdentifier": "com.italo.appdb"
+            "bundleIdentifier": "com.italo.appdb",
+            "infoPlist": {
+                "UIBackgroundModes": ["BACKGROUND_FETCH_TASK"]
+            }
         },
         "android": {
             "adaptiveIcon": {
                 "foregroundImage": "./assets/adaptive-icon.png",
                 "backgroundColor": "#ffffff"
             },
-            "permissions": ["android.permission.CAMERA"],
+            "permissions": [
+                "android.permission.CAMERA",
+                "android.permission.RECEIVE_BOOT_COMPLETED",
+                "android.permission.WAKE_LOCK"
+            ],
             "package": "com.italo.appdb"
         },
         "web": {

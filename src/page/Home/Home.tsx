@@ -16,12 +16,13 @@ export function Home() {
     const {
         inputNameRef,
         inputQtdRef,
-        isfocused,
-        status,
         dataLength,
         itemCurrent,
+        setItemCurrent,
+        navigate,
         handlePermissionCamera,
         handleSaveDB,
+        schedulePushNotification,
     } = useModelViewHome();
 
     return (

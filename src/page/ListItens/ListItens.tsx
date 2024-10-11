@@ -14,7 +14,6 @@ import { database } from "../../dataBase";
 import { ProductModel } from "../../dataBase/model/productModel";
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { suparbaseConnetion } from "../../dataBase/service/supabase";
-import { Q } from "@nozbe/watermelondb";
 export function ListItens() {
     const DATE_DEFAULT = new Date("1970-01-01T00:00:00.000Z").getTime();
     const [dbItens, setDbItens] = useState<ProductModel[]>([]);
@@ -38,8 +37,7 @@ export function ListItens() {
                 file_photo: item.file_photo,
                 updated_at: update,
             };
-            const { data, error, status } = await suparbaseConnetion.from("syncDB").insert(newData);
-            console.log("handleaAddDB - data", status);
+            await suparbaseConnetion.from("syncDB").insert(newData);
             const Uniqueproduct = await database.get<ProductModel>("product").find(item.id);
             await Uniqueproduct.update(() => {
                 Uniqueproduct.updated_at = new Date(update).getTime();
@@ -66,7 +64,6 @@ export function ListItens() {
                 dbItens.map((item) => (
                     <View style={styles.containerItem} key={item.id}>
                         <View style={styles.containerItemRow}>
-                            {console.log(item.updated_at)}
                             <MaterialCommunityIcons name="database-check" size={24} color="green" />
                             {new Date(item.updated_at).getTime() == DATE_DEFAULT ? (
                                 <Ionicons name="cloud-offline" size={24} color="orange" />
