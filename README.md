@@ -1,4 +1,4 @@
-# ![capa](./assets/icon.png)
+# ![capa](./assets/capa.png)
 
 O desevolvimento da POCK foi com estudos em banco de dados local sincronização de em segundo plano, notificação das sincronizações e modificação de
 onde as fotos serão salvar fora do cache da camera.
